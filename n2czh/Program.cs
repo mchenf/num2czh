@@ -19,6 +19,10 @@ namespace n2czh
             (char)25342, (char)20336, (char)20191,
             (char)19975, (char)20159, (char)20806
         };
+        readonly static char[] lsCurrency = new char[]
+        {
+            '\u5706', '\u89d2', '\u5206'
+        };
 
         readonly static string rxNumber = @"^\d+(\.\d{1,2}){0,1}$";
 
@@ -51,7 +55,23 @@ namespace n2czh
                 );
                 return;
             }
+            //处理小数点之后的
+            string[] NumParts = args[0].Split('.');
 
+            var resultSB = new StringBuilder();
+            if(NumParts.Length == 2)
+            {
+                // len 不会超过 2， 因为 rxNumber
+                int len = NumParts[1].Length;
+                for (int i = 0; i < len; i++)
+                {
+                    int numIndex = int.Parse(NumParts[1].Substring(i, 1));
+                    resultSB.Append(lsChars[numIndex])
+                            .Append(lsCurrency[1 + i]);
+                }
+            }
+
+            Console.WriteLine(resultSB.ToString());
 
 
         }
