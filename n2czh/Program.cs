@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace n2czh
@@ -72,7 +73,7 @@ namespace n2czh
                 {
                     string digit = NumParts[1].Substring(i, 1);
                     if (digit == "0") continue; //小数点后面的不需要输出零
-                    int numIndex = int.Parse(NumParts[1].Substring(i, 1));
+                    int numIndex = cChr2Int(NumParts[1][i]);
                     resultSB.Append(lsChars[numIndex])
                             .Append(lsCurrency[1 + i]);
                     if (needZheng) needZheng = false;
@@ -92,9 +93,20 @@ namespace n2czh
 
         }
 
-        internal static void ConvertN2czh(int unitDigit, int unitLength, StringBuilder strBuilder)
+        internal static StringBuilder ConvertN2czh(
+            this StringBuilder sb,
+            ReadOnlySpan<char> target, 
+            char unit1, char unit2)
         {
 
+
+
+
+
+            return sb;
         }
+
+        private static int cChr2Int(char c) => c - '0';
+        
     }
 }
