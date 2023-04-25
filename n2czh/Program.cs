@@ -14,9 +14,10 @@ namespace n2czh
             (char)38470, (char)26578, (char)25420,
             (char)29590
         };
-        //拾佰仟万亿兆
+        //圆拾佰仟万亿兆
         readonly static char[] lsUnits = new char[]
         {
+            '\u5706', 
             (char)25342, (char)20336, (char)20191,
             (char)19975, (char)20159, (char)20806
         };
@@ -64,6 +65,20 @@ namespace n2czh
 
             var resultSB = new StringBuilder();
 
+
+
+            // 处理小数点之前的部分
+
+            int len2 = NumParts[0].Length;
+
+            for (int i = 0; i < len2; i++)
+            {
+                int num = NumParts[0][i].CtoInt();
+                char czh = lsChars[num];
+                resultSB.Append(czh);
+            
+            }
+
             // 处理小数点之后的
             if (NumParts.Length == 2)
             {
@@ -73,15 +88,12 @@ namespace n2czh
                 {
                     string digit = NumParts[1].Substring(i, 1);
                     if (digit == "0") continue; //小数点后面的不需要输出零
-                    int numIndex = cChr2Int(NumParts[1][i]);
+                    int numIndex = NumParts[1][i].CtoInt();
                     resultSB.Append(lsChars[numIndex])
                             .Append(lsCurrency[1 + i]);
                     if (needZheng) needZheng = false;
                 }
             }
-
-            // 处理小数点之前的部分
-
 
 
             if (needZheng)
@@ -93,9 +105,17 @@ namespace n2czh
 
         }
 
-        internal static StringBuilder ConvertN2czh(
+        
+
+        
+        
+    }
+
+    internal static class Helpers
+    {
+        internal static StringBuilder ToCapZh(
             this StringBuilder sb,
-            ReadOnlySpan<char> target, 
+            ReadOnlySpan<char> target,
             char unit1, char unit2)
         {
 
@@ -105,8 +125,6 @@ namespace n2czh
 
             return sb;
         }
-
-        private static int cChr2Int(char c) => c - '0';
-        
+        internal static int CtoInt(this char c) => c - '0';
     }
 }
