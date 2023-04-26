@@ -75,56 +75,7 @@ namespace n2czh
 
 
             // 处理小数点之前的部分
-            int numLen = NumParts[0].Length;
-            int startIndex = numLen - 4;
-            startIndex = startIndex < 0 ? 0 : startIndex;
-            int takeLen = numLen < 4 ? numLen : 4;
-
-
-            string segment1 = NumParts[0].Substring(startIndex, takeLen);
-
-            numLen -= takeLen;
-            resultSB.Append(Helpers.ToCapZh0(segment1.ToCharArray()));
-            if (numLen > 0)
-            {
-                startIndex = numLen - 4;
-                startIndex = startIndex < 0 ? 0 : startIndex;
-                takeLen = numLen < 4 ? numLen : 4;
-
-                //位级变换之时，是否需要以零连接
-                if (segment1[0] == '0')
-                {
-                    resultSB.Insert(0, GlobalVars.NumChars[0]);
-                }
-
-                segment1 = NumParts[0].Substring(startIndex, takeLen);
-
-                if(!segment1.All(num => num == '0')) //如果万级全为零时，直接跳过输出
-                {
-                    resultSB.Insert(0, Helpers.ToCapZh1(segment1.ToCharArray()));
-                }
-                numLen -= takeLen;
-            }
-            if (numLen > 0)
-            {
-                startIndex = numLen - 4;
-                startIndex = startIndex < 0 ? 0 : startIndex;
-                takeLen = numLen < 4 ? numLen : 4;
-
-                //位级变换之时，是否需要以零连接
-                if (segment1[0] == '0')
-                {
-                    resultSB.Insert(0, GlobalVars.NumChars[0]);
-                }
-
-                segment1 = NumParts[0].Substring(startIndex, takeLen);
-
-                if (!segment1.All(num => num == '0')) //如果亿级全为零时，直接跳过输出
-                {
-                    resultSB.Insert(0, Helpers.ToCapZh1(segment1.ToCharArray()));
-                }
-            }
-
+            resultSB.Insert(0, Helpers.ToCapZh3(NumParts[0]));
 
             // 处理小数点之后的
             if (NumParts.Length == 2)
@@ -195,34 +146,83 @@ namespace n2czh
             }
             return (s1, l1, l2);
         }
-        internal static string ToCapZh2(
-            char[] target)
-        {
-            var sb = new StringBuilder();
-            sb.Append(ToCapZh0(target));
 
-            sb.Append(GlobalVars.UnitChars[5]);
-            sb.Append('y');
+
+        //生成一个兆级数字，长度不超过32
+        internal static string ToCapZh3(
+            string target)
+        {
+
+            Console.WriteLine($"[INFO]: ToCapZh3({target})");
+
+            if (target.Length == 0 || target.Length > 32) return string.Empty;
+            (string o1, string o2) = target.SplitNumStr(16);
+            var sb = new StringBuilder();
+            //生成兆级部分
+            if (o1 != string.Empty)
+            {
+                sb.Append(ToCapZh2(o1));
+                sb.Append(GlobalVars.UnitChars[6]);
+            }
+            //生成万级部分
+            sb.Append(ToCapZh2(o2));
+            return sb.ToString();
+        }
+
+
+        //生成一个亿级数字，长度不超过16
+        internal static string ToCapZh2(
+            string target)
+        {
+
+            Console.WriteLine($"[INFO]: ToCapZh2({target})");
+
+            if (target.Length == 0 || target.Length > 16) return string.Empty;
+            (string o1, string o2) = target.SplitNumStr(8);
+            var sb = new StringBuilder();
+            //生成亿级部分
+            if (o1 != string.Empty)
+            {
+                sb.Append(ToCapZh1(o1));
+                sb.Append(GlobalVars.UnitChars[5]);
+            }
+            //生成万级部分
+            sb.Append(ToCapZh1(o2));
             return sb.ToString();
         }
         //生成一个万级数字，长度不超过8
         internal static string ToCapZh1(
-            char[] target)
+            string target)
         {
-            var sb = new StringBuilder();
-            sb.Append(ToCapZh0(target));
 
-            sb.Append(GlobalVars.UnitChars[4]);
+            Console.WriteLine($"[INFO]: ToCapZh1({target})");
+            if (target.Length == 0 || target.Length > 8) return string.Empty;
+            (string o1, string o2) = target.SplitNumStr(4);
+
+
+            var sb = new StringBuilder();
+            //生成万级部分
+            if(o1 != string.Empty)
+            {
+                sb.Append(ToCapZh0(o1));
+                sb.Append(GlobalVars.UnitChars[4]);
+            }
+
+            //生成一个個级
+            sb.Append(ToCapZh0(o2));
+
+
             return sb.ToString();
         }
         //生成一个個级的大写数字, 长度不超过4
         internal static string ToCapZh0(
-            char[] target)
+            string target)
         {
-            var sb = new StringBuilder();
+            Console.WriteLine($"[INFO]: ToCapZh0({target})");
             int len = target.Length;
             if (len == 0 || len > 4) return string.Empty;
 
+            var sb = new StringBuilder();
             var zeroState = WriteZeroStates.None;
             //开始循环处理，最大4位
             for (int i = len - 1; i >= 0; i--)
