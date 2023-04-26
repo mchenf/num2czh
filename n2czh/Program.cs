@@ -151,38 +151,49 @@ namespace n2czh
         }
     }
 
-    internal static class Helpers
+    public static class Helpers
     {
+
+        public static (string, string) SplitNumStr(this string input, int TakeRight)
+        {
+            int s1, l1, l2;
+            string out1, out2;
+            (s1, l1, l2) = CutRight(input.Length, TakeRight);
+            out1 = out2 = "";
+            if (l1 > 0)
+            {
+                out1 = input.Substring(s1, l1);
+            }
+
+            out2 = input.Substring(l1, l2);
+
+            return (out1, out2);
+        }
         /// <summary>
         /// 从一个长度为 <paramref name="Length"/> 的字符串中，试图从右边拿走 <paramref name="TakeRight"/> 个字
         /// </summary>
         /// <param name="Length">字符串的总长</param>
         /// <param name="TakeRight">从右边拿走多少个字</param>
         /// <returns>第一段的开始位置、长度、第二段的开始位置、长度</returns>
-        internal static (int, int, int, int) CutRight(int Length, int TakeRight)
+        public static (int, int, int) CutRight(int Length, int TakeRight)
         {
-            int s1, l1, s2, l2;
+            int s1, l1, l2;
 
-            s1 = l1 = s2 = l2 = 0;
+            s1 = l1 = l2 = 0;
 
             if (Length <= TakeRight)
             {
 
                 //总长度不够取
-                s2 = 0;
                 l2 = Length;
             }
             else
             {
                 //总长度够取
                 l1 = Length - TakeRight;
-                s2 = l1 + 1;
                 l2 = TakeRight;
             }
-
-
-
-            return (s1, l1, s2, l2);
+            return (s1, l1, l2);
         }
         internal static string ToCapZh2(
             char[] target)
