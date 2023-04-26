@@ -15,10 +15,12 @@ namespace n2czh
             (char)38470, (char)26578, (char)25420,
             (char)29590
         };
-        //圆拾佰仟万亿兆
+        //空
+        //拾佰仟
+        //万亿兆
         internal readonly static char[] UnitChars = new char[]
         {
-            '\u5706',
+            '\0',
             (char)25342, (char)20336, (char)20191,
             (char)19975, (char)20159, (char)20806
         };
@@ -51,7 +53,7 @@ namespace n2czh
             {
                 Console.WriteLine(
                     string.Format(
-                        @"**ERROR** n2czh only recognize pattern match/{0}/",
+                        @"**ERROR** n2czh only recognize pattern match /{0}/",
                         rxNumber
                     )
                 );
@@ -81,7 +83,47 @@ namespace n2czh
 
             string segment1 = NumParts[0].Substring(startIndex, takeLen);
 
-            resultSB.ToCapZh0(segment1.ToCharArray());
+            numLen -= takeLen;
+            resultSB.Append(Helpers.ToCapZh0(segment1.ToCharArray()));
+            if (numLen > 0)
+            {
+                startIndex = numLen - 4;
+                startIndex = startIndex < 0 ? 0 : startIndex;
+                takeLen = numLen < 4 ? numLen : 4;
+
+                //位级变换之时，是否需要以零连接
+                if (segment1[0] == '0')
+                {
+                    resultSB.Insert(0, GlobalVars.NumChars[0]);
+                }
+
+                segment1 = NumParts[0].Substring(startIndex, takeLen);
+
+                if(!segment1.All(num => num == '0')) //如果万级全为零时，直接跳过输出
+                {
+                    resultSB.Insert(0, Helpers.ToCapZh1(segment1.ToCharArray()));
+                }
+                numLen -= takeLen;
+            }
+            if (numLen > 0)
+            {
+                startIndex = numLen - 4;
+                startIndex = startIndex < 0 ? 0 : startIndex;
+                takeLen = numLen < 4 ? numLen : 4;
+
+                //位级变换之时，是否需要以零连接
+                if (segment1[0] == '0')
+                {
+                    resultSB.Insert(0, GlobalVars.NumChars[0]);
+                }
+
+                segment1 = NumParts[0].Substring(startIndex, takeLen);
+
+                if (!segment1.All(num => num == '0')) //如果亿级全为零时，直接跳过输出
+                {
+                    resultSB.Insert(0, Helpers.ToCapZh1(segment1.ToCharArray()));
+                }
+            }
 
 
             // 处理小数点之后的
@@ -106,25 +148,69 @@ namespace n2czh
                 resultSB.Append(GlobalVars.CurrencyChars[3]);
             }
             Console.WriteLine(resultSB.ToString());
-
-
         }
-
-        
-
-        
-        
     }
 
     internal static class Helpers
     {
-        //生成一个千位的大写数字
-        internal static StringBuilder ToCapZh0(
-            this StringBuilder sb,
+        /// <summary>
+        /// 从一个长度为 <paramref name="Length"/> 的字符串中，试图从右边拿走 <paramref name="TakeRight"/> 个字
+        /// </summary>
+        /// <param name="Length">字符串的总长</param>
+        /// <param name="TakeRight">从右边拿走多少个字</param>
+        /// <returns>第一段的开始位置、长度、第二段的开始位置、长度</returns>
+        internal static (int, int, int, int) CutRight(int Length, int TakeRight)
+        {
+            int s1, l1, s2, l2;
+
+            s1 = l1 = s2 = l2 = 0;
+
+            if (Length <= TakeRight)
+            {
+
+                //总长度不够取
+                s2 = 0;
+                l2 = Length;
+            }
+            else
+            {
+                //总长度够取
+                l1 = Length - TakeRight;
+                s2 = l1 + 1;
+                l2 = TakeRight;
+            }
+
+
+
+            return (s1, l1, s2, l2);
+        }
+        internal static string ToCapZh2(
             char[] target)
         {
+            var sb = new StringBuilder();
+            sb.Append(ToCapZh0(target));
+
+            sb.Append(GlobalVars.UnitChars[5]);
+            sb.Append('y');
+            return sb.ToString();
+        }
+        //生成一个万级数字，长度不超过8
+        internal static string ToCapZh1(
+            char[] target)
+        {
+            var sb = new StringBuilder();
+            sb.Append(ToCapZh0(target));
+
+            sb.Append(GlobalVars.UnitChars[4]);
+            return sb.ToString();
+        }
+        //生成一个個级的大写数字, 长度不超过4
+        internal static string ToCapZh0(
+            char[] target)
+        {
+            var sb = new StringBuilder();
             int len = target.Length;
-            if (len == 0 || len > 4) return sb;
+            if (len == 0 || len > 4) return string.Empty;
 
             var zeroState = WriteZeroStates.None;
             //开始循环处理，最大4位
@@ -145,26 +231,20 @@ namespace n2czh
                     sb.Insert(0, unit);
                     sb.Insert(0, num);
 
+                    zeroState = zeroState & ~WriteZeroStates.PreIsZero; //去掉前位非零信号
                     zeroState |= WriteZeroStates.BeenNonZero;
                 }
                 else
                 {
                     //当前为零时
                     zeroState = zeroState & ~WriteZeroStates.CurIsNonZero; //去掉当前非零信号
-
-
-
-
                     zeroState |= WriteZeroStates.PreIsZero; //将前位为零信号传递到下一次循环
                 }
 
             }
-
-
-
-
-            return sb;
+            return sb.ToString();
         }
+
         internal static int CtoInt(this char c) => c - '0';
     }
     [Flags]
