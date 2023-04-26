@@ -1,13 +1,14 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Net.Security;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace n2czh
 {
-    internal class Program
+    internal static class GlobalVars
     {
         //零壹贰叄肆伍陆柒捌玖
-        readonly static char[] lsChars = new char[]
+        internal readonly static char[] NumChars = new char[]
         {
             (char)38646, (char)22777, (char)36144,
             (char)21444, (char)32902, (char)20237,
@@ -15,17 +16,21 @@ namespace n2czh
             (char)29590
         };
         //圆拾佰仟万亿兆
-        readonly static char[] lsUnits = new char[]
+        internal readonly static char[] UnitChars = new char[]
         {
-            '\u5706', 
+            '\u5706',
             (char)25342, (char)20336, (char)20191,
             (char)19975, (char)20159, (char)20806
         };
         //圆角分整
-        readonly static char[] lsCurrency = new char[]
+        internal readonly static char[] CurrencyChars = new char[]
         {
             '\u5706', '\u89d2', '\u5206', '\u6574'
         };
+    }
+    internal class Program
+    {
+        
 
         readonly static string rxNumber = @"^\d+(\.\d{1,2}){0,1}$";
 
@@ -68,16 +73,16 @@ namespace n2czh
 
 
             // 处理小数点之前的部分
+            int numLen = NumParts[0].Length;
+            int startIndex = numLen - 4;
+            startIndex = startIndex < 0 ? 0 : startIndex;
+            int takeLen = numLen < 4 ? numLen : 4;
 
-            int len2 = NumParts[0].Length;
 
-            for (int i = 0; i < len2; i++)
-            {
-                int num = NumParts[0][i].CtoInt();
-                char czh = lsChars[num];
-                resultSB.Append(czh);
-            
-            }
+            string segment1 = NumParts[0].Substring(startIndex, takeLen);
+
+            resultSB.ToCapZh0(segment1.ToCharArray());
+
 
             // 处理小数点之后的
             if (NumParts.Length == 2)
@@ -89,8 +94,8 @@ namespace n2czh
                     string digit = NumParts[1].Substring(i, 1);
                     if (digit == "0") continue; //小数点后面的不需要输出零
                     int numIndex = NumParts[1][i].CtoInt();
-                    resultSB.Append(lsChars[numIndex])
-                            .Append(lsCurrency[1 + i]);
+                    resultSB.Append(GlobalVars.NumChars[numIndex])
+                            .Append(GlobalVars.CurrencyChars[1 + i]);
                     if (needZheng) needZheng = false;
                 }
             }
@@ -98,7 +103,7 @@ namespace n2czh
 
             if (needZheng)
             {
-                resultSB.Append(lsCurrency[3]);
+                resultSB.Append(GlobalVars.CurrencyChars[3]);
             }
             Console.WriteLine(resultSB.ToString());
 
@@ -113,12 +118,47 @@ namespace n2czh
 
     internal static class Helpers
     {
-        internal static StringBuilder ToCapZh(
+        //生成一个千位的大写数字
+        internal static StringBuilder ToCapZh0(
             this StringBuilder sb,
-            ReadOnlySpan<char> target,
-            char unit1, char unit2)
+            char[] target)
         {
+            int len = target.Length;
+            if (len == 0 || len > 4) return sb;
 
+            var zeroState = WriteZeroStates.None;
+            //开始循环处理，最大4位
+            for (int i = len - 1; i >= 0; i--)
+            {
+                //对零进行特殊处理
+                if (target[i] > '0')
+                {
+                    zeroState |= WriteZeroStates.CurIsNonZero;
+
+                    if (zeroState == WriteZeroStates.Ready)
+                    {
+                        sb.Insert(0, GlobalVars.NumChars[0]);
+                    }
+
+                    char num = GlobalVars.NumChars[target[i].CtoInt()];
+                    char unit = GlobalVars.UnitChars[len - i - 1];
+                    sb.Insert(0, unit);
+                    sb.Insert(0, num);
+
+                    zeroState |= WriteZeroStates.BeenNonZero;
+                }
+                else
+                {
+                    //当前为零时
+                    zeroState = zeroState & ~WriteZeroStates.CurIsNonZero; //去掉当前非零信号
+
+
+
+
+                    zeroState |= WriteZeroStates.PreIsZero; //将前位为零信号传递到下一次循环
+                }
+
+            }
 
 
 
@@ -126,5 +166,14 @@ namespace n2czh
             return sb;
         }
         internal static int CtoInt(this char c) => c - '0';
+    }
+    [Flags]
+    internal enum WriteZeroStates
+    {
+        None            = 0b_0000_0000,
+        BeenNonZero     = 0b_0000_0001, //之前曾经为非零
+        PreIsZero       = 0b_0000_0010, //前位为零
+        CurIsNonZero    = 0b_0000_0100, //当前为非零
+        Ready           = BeenNonZero | PreIsZero | CurIsNonZero
     }
 }
