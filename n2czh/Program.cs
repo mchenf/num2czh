@@ -201,15 +201,26 @@ namespace n2czh
 
 
             var sb = new StringBuilder();
+
+            //判断 o1 是否为空或者全零
+            bool NotEmptyOrZero = o1 != string.Empty && o1 != new string('0', o1.Length);
             //生成万级部分
-            if(o1 != string.Empty)
+            if (NotEmptyOrZero)
             {
                 sb.Append(ToCapZh0(o1));
                 sb.Append(GlobalVars.UnitChars[4]);
             }
 
             //生成一个個级
-            sb.Append(ToCapZh0(o2));
+
+            if (o2.Length > 0 && o2[0] == '0')
+            {
+                //如果o2 以0开头，向 sb 输入一个零
+                sb.Append(GlobalVars.NumChars[0]);
+            }
+
+            string o2C = ToCapZh0(o2);
+            sb.Append(o2C);
 
 
             return sb.ToString();
