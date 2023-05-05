@@ -31,7 +31,8 @@ namespace n2czh.core.Tests
         [DataRow("0", "", DisplayName = "零")]
         public void ProcessKClassTest(string input, string expected)
         {
-            string actual = new string(input.ToCharArray().ProcessKClass());
+            ReadOnlySpan<char> inp = new ReadOnlySpan<char>(input.ToCharArray());
+            string actual = new string(inp.ProcessKClass());
             Assert.AreEqual(expected, actual);
         }
     }

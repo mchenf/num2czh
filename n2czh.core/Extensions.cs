@@ -11,7 +11,7 @@ namespace n2czh.core
     public static class Extensions
     {
         //生成一个個级的大写数字, 长度不超过4
-        public static char[] ProcessKClass(this char[] target)
+        public static char[] ProcessKClass(this ReadOnlySpan<char> target)
         {
             int len = target.Length;
             if (len == 0 || len > 4) return new char[0];

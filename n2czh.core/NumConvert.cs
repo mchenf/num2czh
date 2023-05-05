@@ -10,7 +10,7 @@ namespace n2czh.core
     public class NumConvert
     {
         private static readonly string validNumberString = @"^[1-9]\d+(\.\d{1,2}){0,1}$";
-        private int[] numbers = new int[32];
+        private char[] numbers = new char[32];
         /// <summary>
         /// 当前整数部分的长度，最大为兆级（32）位
         /// </summary>
@@ -31,13 +31,13 @@ namespace n2czh.core
                 int len = input.Length;
                 int i = 0;
                 for (; i < len && input[i] != '.'; i++) {
-                    numbers[i] = input[i] - '0';
+                    numbers[i] = input[i];
                 }
                 Length = i;
                 //最大剩余两位
                 i++;
                 for (int j = 0; i < len; i++, j++) {
-                    decimals[j] = input[i] - '0';
+                    decimals[j] = input[i];
                     LengthDecimal++;
                 }
             }
@@ -77,15 +77,17 @@ namespace n2czh.core
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
+
+            ReadOnlySpan<char> nums = new ReadOnlySpan<char>(numbers);
+
             int remain = Length;
             while (remain > 0)
             {
                 (remain, int take) = BreakString(remain);
-                char[] buffer = new char[take];
-                for (int i = 0; i < take; i++)
-                {
-                    buffer[i] = GlobalVariables.NumChars[numbers[remain + i]];
-                }
+                var slice = nums.Slice(remain, take);
+
+
+                char[] buffer = slice.ProcessKClass();
                 sb.Insert(0, buffer);
             }
 
