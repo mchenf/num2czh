@@ -12,13 +12,23 @@ namespace n2czh.core.Tests
     public class ExtensionsTests
     {
         [TestMethod()]
-        [DataRow("1234", "壹仟贰佰叄拾肆")]
-        [DataRow("6532", "陆仟伍佰叄拾贰")]
-        [DataRow("7047", "柒仟零肆拾柒")]
-        [DataRow("7005", "柒仟零伍")]
-        [DataRow("2000", "贰仟")]
-        [DataRow("3760", "叄仟柒佰陆拾")]
-        [DataRow("1200", "壹仟贰佰")]
+        [DataRow("6532", "陆仟伍佰叄拾贰", DisplayName = "全四位")]
+        [DataRow("7047", "柒仟零肆拾柒", DisplayName = "全四位，百位为零")]
+        [DataRow("7005", "柒仟零伍", DisplayName = "全四位, 百位十位为零")]
+        [DataRow("2000", "贰仟", DisplayName = "全四位, 百位十位个位为零")]
+        [DataRow("3760", "叄仟柒佰陆拾", DisplayName = "全四位, 个位为零")]
+        [DataRow("1200", "壹仟贰佰", DisplayName = "全四位, 十位个位为零")]
+
+        [DataRow("567", "伍佰陆拾柒", DisplayName = "仅三位")]
+        [DataRow("809", "捌佰零玖", DisplayName = "仅三位，含零")]
+        [DataRow("400", "肆佰", DisplayName = "仅三位，佰")]
+
+        [DataRow("57", "伍拾柒", DisplayName = "仅两位")]
+        [DataRow("80", "捌拾", DisplayName = "仅两位，含零")]
+
+        [DataRow("6", "陆", DisplayName = "仅一")]
+
+        [DataRow("0", "", DisplayName = "零")]
         public void ProcessKClassTest(string input, string expected)
         {
             string actual = new string(input.ToCharArray().ProcessKClass());
