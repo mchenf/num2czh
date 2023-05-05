@@ -2,6 +2,7 @@
 using n2czh.core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -34,9 +35,9 @@ namespace n2czh.core.Tests
         }
 
         [TestMethod()]
-        [DataRow("332774", new int[] {}, new int[] {3, 3, 2, 7, 7, 4 }, DisplayName = "Short Digit Only Number")]
+        [DataRow("332774", new int[] { }, new int[] { 3, 3, 2, 7, 7, 4 }, DisplayName = "Short Digit Only Number")]
         [DataRow("2217.73", new int[] { 7, 3 }, new int[] { 2, 2, 1, 7 }, DisplayName = "Short Digit Number, Decimal")]
-        [DataRow("223359988000332", new int[] {}, new int[] { 2, 2, 3, 3, 5, 9, 9, 8, 8, 0, 0, 0, 3, 3, 2 }, DisplayName = "Long Digit Only Number")]
+        [DataRow("223359988000332", new int[] { }, new int[] { 2, 2, 3, 3, 5, 9, 9, 8, 8, 0, 0, 0, 3, 3, 2 }, DisplayName = "Long Digit Only Number")]
         [DataRow("223359988000332.89", new int[] { 8, 9 }, new int[] { 2, 2, 3, 3, 5, 9, 9, 8, 8, 0, 0, 0, 3, 3, 2 }, DisplayName = "Long Digit Number, Decimal")]
         public void NumConvertTest(string NumberString, int[] expectedDecimal, int[] expectedNumber)
         {
@@ -44,6 +45,39 @@ namespace n2czh.core.Tests
             ExpectedNumConvert expected = new ExpectedNumConvert(expectedDecimal, expectedNumber);
             Assert.IsTrue(expected == actual);
 
+        }
+
+        [TestMethod()]
+        [DataRow("332", "", "332")]
+        [DataRow("3322225567", "332222", "5567")]
+        [DataRow("3311122", "331", "1122")]
+        [DataRow("3311122", "331", "1122")]
+
+        public void BreakStringTest(string number, string exp1, string exp2)
+        {
+            int len = number.Length;
+
+            (int i, int l) = NumConvert.BreakString(len);
+            Console.WriteLine("len={0}", len);
+            Console.WriteLine("i={0}", i);
+            Console.WriteLine("l={0}", l);
+            string actual1 = i == 0 ? "" : number.Substring(0, i);
+            string actual2 = number.Substring(i, l);
+            Console.WriteLine("actual1={0}\r\nactual2={1}", actual1, actual2);
+            Assert.AreEqual(exp1, actual1);
+            Assert.AreEqual(exp2, actual2);
+
+
+        }
+
+        [TestMethod()]
+        public void NumConvertTest1()
+        {
+            var n = new NumConvert("332502");
+
+            Debug.Print(n.ToString());
+
+            Assert.Fail();
         }
     }
 

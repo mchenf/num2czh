@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace n2czh.core
@@ -11,11 +12,11 @@ namespace n2czh.core
         private static readonly string validNumberString = @"^[1-9]\d+(\.\d{1,2}){0,1}$";
         private int[] numbers = new int[32];
         /// <summary>
-        /// 当前整数部分的长度
+        /// 当前整数部分的长度，最大为兆级（32）位
         /// </summary>
         public int Length { get; private set; } = 0;
         /// <summary>
-        /// 当前小数部分的长度
+        /// 当前小数部分的长度，最大为两位
         /// </summary>
         public int LengthDecimal { get; private set; } = 0;
         private int[] decimals = new int[2];
@@ -67,6 +68,47 @@ namespace n2czh.core
         public static bool Validate(string number)
         {
             return Regex.IsMatch(number, validNumberString);
+        }
+
+        /// <summary>
+        /// 将阿拉伯数字字符串转换为中文大写金额
+        /// </summary>
+        /// <returns>中文大写的金额</returns>
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            int remain = Length;
+            while (remain > 0)
+            {
+                (remain, int take) = BreakString(remain);
+                char[] buffer = new char[take];
+                for (int i = 0; i < take; i++)
+                {
+                    buffer[i] = GlobalVariables.NumChars[numbers[remain + i]];
+                }
+                sb.Insert(0, buffer);
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// 将代表字符串长度的正数 <paramref name="input"/> 以4为基底分解到新的位置
+        /// 0123456789 =>
+        /// 012345 | 6789
+        /// 输入 10
+        /// 返回 (6, 4)
+        /// 123 =>
+        /// null | 123
+        /// 输入 3
+        /// 返回 (0, 3)
+        /// </summary>
+        /// <param name="input">当前字符串的长度</param>
+        /// <returns>(起始,长度)</returns>
+        public static (int, int) BreakString(int input)
+        {
+            int len = Math.Min(input, 4);
+            return (input - len, len);
         }
     }
 }
