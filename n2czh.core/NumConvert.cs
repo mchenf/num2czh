@@ -95,7 +95,7 @@ namespace n2czh.core
         }
 
         /// <summary>
-        /// 将代表字符串长度的正数 <paramref name="input"/> 以4为基底分解到新的位置
+        /// 将代表字符串长度的正数 <paramref name="input"/> 以 <paramref name="cut"/> 为基底分解到新的位置
         /// 0123456789 =>
         /// 012345 | 6789
         /// 输入 10
@@ -106,10 +106,11 @@ namespace n2czh.core
         /// 返回 (0, 3)
         /// </summary>
         /// <param name="input">当前字符串的长度</param>
+        /// <param name="cut">切割多少长度</param>
         /// <returns>(起始,长度)</returns>
-        public static (int, int) BreakString(int input)
+        public static (int, int) BreakString(int input, int cut = 4)
         {
-            int len = Math.Min(input, 4);
+            int len = Math.Min(input, cut);
             return (input - len, len);
         }
     }
