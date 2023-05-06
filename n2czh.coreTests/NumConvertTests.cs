@@ -57,7 +57,7 @@ namespace n2czh.core.Tests
         {
             int len = number.Length;
 
-            (int i, int l) = NumConvert.BreakString(len);
+            (int i, int l) = len.BreakString();
             Console.WriteLine("len={0}", len);
             Console.WriteLine("i={0}", i);
             Console.WriteLine("l={0}", l);
@@ -77,7 +77,34 @@ namespace n2czh.core.Tests
 
             Debug.Print(n.ToString());
 
-            Assert.Fail();
+            Assert.IsTrue(true);
+        }
+
+        [TestMethod()]
+        [DataRow("4220", "肆仟贰佰贰拾")]
+        [DataRow("881", "捌佰捌拾壹")]
+        [DataRow("74", "柒拾肆")]
+        [DataRow("9", "玖")]
+
+        [DataRow("766480", "柒拾陆万陆仟肆佰捌拾")]
+        [DataRow("42206480", "肆仟贰佰贰拾万陆仟肆佰捌拾")]
+
+        [DataRow("422042206480", "肆仟贰佰贰拾亿肆仟贰佰贰拾万陆仟肆佰捌拾")]
+        [DataRow("6422042206480", "陆万肆仟贰佰贰拾亿肆仟贰佰贰拾万陆仟肆佰捌拾")]
+
+
+        [DataRow("7664876422042206480", "柒佰陆拾陆兆肆仟捌佰柒拾陆万肆仟贰佰贰拾亿肆仟贰佰贰拾万陆仟肆佰捌拾")]
+        [DataRow("977664876422042206480", "玖万柒仟柒佰陆拾陆兆肆仟捌佰柒拾陆万肆仟贰佰贰拾亿肆仟贰佰贰拾万陆仟肆佰捌拾")]
+        [DataRow("776977664876422042206480", "柒仟柒佰陆拾玖万柒仟柒佰陆拾陆兆肆仟捌佰柒拾陆万肆仟贰佰贰拾亿肆仟贰佰贰拾万陆仟肆佰捌拾")]
+        [DataRow("270776977664876422042206480", "贰佰柒拾亿柒仟柒佰陆拾玖万柒仟柒佰陆拾陆兆肆仟捌佰柒拾陆万肆仟贰佰贰拾亿肆仟贰佰贰拾万陆仟肆佰捌拾")]
+
+
+
+        public void ToStringTest(string testee, string expected)
+        {
+            var n = new NumConvert(testee);
+            string actual = n.ToString();
+            Assert.AreEqual(expected, actual);
         }
     }
 

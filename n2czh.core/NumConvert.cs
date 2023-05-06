@@ -9,7 +9,7 @@ namespace n2czh.core
     /// </summary>
     public class NumConvert
     {
-        private static readonly string validNumberString = @"^[1-9]\d+(\.\d{1,2}){0,1}$";
+        private static readonly string validNumberString = @"^[1-9]\d*(\.\d{1,2}){0,1}$";
         private char[] numbers = new char[32];
         /// <summary>
         /// 当前整数部分的长度，最大为兆级（32）位
@@ -78,7 +78,7 @@ namespace n2czh.core
         {
 
             ReadOnlySpan<char> nums = new ReadOnlySpan<char>(numbers);
-
+            nums = nums.Slice(0, Length);
             var result = nums.ProcessXClass();
 
             return new string(result);

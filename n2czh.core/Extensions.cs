@@ -48,38 +48,53 @@ namespace n2czh.core
                 return new char[0];
             }
 
+#if DEBUG
+            Console.WriteLine();
+            Console.WriteLine("<ProcessXClass> : 正在处理：{0}", string.Join(',', target.ToArray()));
+
+
+#endif
+
             int take = len > 16 ? 32 : len > 8 ? 16 : len > 4 ? 8 : 4;
+            int unitIndex = len > 16 ? 6 : len > 8 ? 5 : len > 4 ? 4 : 0;
 
             if (take == 4)
             {
                 return target.ProcessKClass();
             }
 
-            char[] buffer;
+            char[] buffer, buffer2;
             char[] result = new char[128];
             int index = 0;
-            int unitIndex = 6;
             int s = 0, t = 0;
-
-            while (take > 4)
-            {
                 take /= 2;
                 (s, t) = len.BreakString(take);
                 var left = target.Slice(0, s);
                 var right = target.Slice(s, t);
+
                 buffer = ProcessXClass(left);
                 for (int i = 0; i < buffer.Length; i++)
                 {
                     result[index++] = buffer[i];
                 }
                 result[index++] = GlobalVariables.UnitChars[unitIndex--];
-                buffer = ProcessXClass(right);
-                for (int i = 0; i < buffer.Length; i++)
+                buffer2 = ProcessXClass(right);
+                for (int i = 0; i < buffer2.Length; i++)
                 {
-                    result[index++] = buffer[i];
+                    result[index++] = buffer2[i];
                 }
+#if DEBUG
+                Console.WriteLine("<ProcessXClass> : 切分为左边 | 右边段: {0} || {1}", string.Join(',', left.ToArray()), string.Join(',', right.ToArray()));
+                Console.WriteLine("<ProcessXClass> : 左边 | 右边处理结果: {0} || {1}", string.Join(',', buffer), string.Join(',', buffer2));
+
+
+#endif
+            char[] output = new char[index];
+            for (int i = 0; i < index; i++)
+            {
+                output[i] = result[i];
             }
-            return result;
+            return output;
         }
         /// <summary>
         /// 从一个长度不超过4位且不为零位的 <paramref name="target"/>
