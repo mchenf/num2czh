@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace n2czh.core
 {
     [Flags]
-    internal enum WriteZeroStates
+    public enum WriteZeroStates
     {
         None = 0b_0000_0000,
         BeenNonZero = 0b_0000_0001, //之前曾经为非零

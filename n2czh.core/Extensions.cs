@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Security;
 using System.Runtime.CompilerServices;
@@ -11,6 +12,18 @@ namespace n2czh.core
 {
     public static class Extensions
     {
+
+        public static bool IsAllZero(this ReadOnlySpan<char> target)
+        {
+            for (int i = 0; i < target.Length; i++)
+            {
+                if (target[i] != '\0')
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
 
         /// <summary>
         /// 将代表字符串长度的正数 <paramref name="input"/> 以 <paramref name="cut"/> 为基底分解到新的位置
@@ -32,15 +45,15 @@ namespace n2czh.core
             return (input - len, len);
         }
         /// <summary>
-        /// 根据 <paramref name="take"/> 的长度，决定数量级，基于 <paramref name="target"/> 生成中文大写数字。
+        /// 根据 <paramref name="target"/> 的长度，决定数量级，基于 <paramref name="target"/> 生成中文大写数字。
         /// 4位，万级；
         /// 8位，亿级；
         /// 16位，兆级；
         /// </summary>
         /// <param name="target">代表目标数字的字符数组片段，长度为 1-32</param>
-        /// <param name="take">切取多少位</param>
+        /// <param name="zero">是否写入零的判断</param>
         /// <returns>转化后的中文大写数字</returns>
-        public static char[] ProcessXClass(this ReadOnlySpan<char> target)
+        public static char[] ProcessXClass(this ReadOnlySpan<char> target, WriteZeroStates zero = WriteZeroStates.None)
         {
             int len = target.Length;
             if (len == 0 || len > 32)
@@ -52,7 +65,7 @@ namespace n2czh.core
             Console.WriteLine();
             Console.WriteLine("<ProcessXClass> : 正在处理：{0}", string.Join(',', target.ToArray()));
 
-
+            zero.Report();
 #endif
 
             int take = len > 16 ? 32 : len > 8 ? 16 : len > 4 ? 8 : 4;
@@ -67,28 +80,35 @@ namespace n2czh.core
             char[] result = new char[128];
             int index = 0;
             int s = 0, t = 0;
-                take /= 2;
-                (s, t) = len.BreakString(take);
-                var left = target.Slice(0, s);
-                var right = target.Slice(s, t);
+            take /= 2;
+            (s, t) = len.BreakString(take);
+            var left = target.Slice(0, s);
+            var right = target.Slice(s, t);
 
-                buffer = ProcessXClass(left);
-                for (int i = 0; i < buffer.Length; i++)
-                {
-                    result[index++] = buffer[i];
-                }
-                result[index++] = GlobalVariables.UnitChars[unitIndex--];
-                buffer2 = ProcessXClass(right);
-                for (int i = 0; i < buffer2.Length; i++)
-                {
-                    result[index++] = buffer2[i];
-                }
+
+            //检查右侧是否为全零
+            //TODO: 完善数字级别之间的写零逻辑
+
+            buffer = ProcessXClass(left, zero);
+
+
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                result[index++] = buffer[i];
+            }
+            result[index++] = GlobalVariables.UnitChars[unitIndex--];
+            buffer2 = ProcessXClass(right, zero);
+            //这一步为拼接左右两边
+            for (int i = 0; i < buffer2.Length; i++)
+            {
+                result[index++] = buffer2[i];
+            }
+
 #if DEBUG
-                Console.WriteLine("<ProcessXClass> : 切分为左边 | 右边段: {0} || {1}", string.Join(',', left.ToArray()), string.Join(',', right.ToArray()));
-                Console.WriteLine("<ProcessXClass> : 左边 | 右边处理结果: {0} || {1}", string.Join(',', buffer), string.Join(',', buffer2));
-
-
+            Console.WriteLine("<ProcessXClass> : 切分为左边 | 右边段: {0} || {1}", string.Join(',', left.ToArray()), string.Join(',', right.ToArray()));
+            Console.WriteLine("<ProcessXClass> : 左边 | 右边处理结果: {0} || {1}", string.Join(',', buffer), string.Join(',', buffer2));
 #endif
+
             char[] output = new char[index];
             for (int i = 0; i < index; i++)
             {
@@ -112,7 +132,6 @@ namespace n2czh.core
             //开始循环处理，最大4位
             for (int i = len - 1; i >= 0; i--)
             {
-                //对零进行特殊处理
                 if (target[i] > '0')
                 {
                     zeroState |= WriteZeroStates.CurIsNonZero;
@@ -134,13 +153,14 @@ namespace n2czh.core
                     buffer[ptr] = num;
                     ptr--;
 
-                    zeroState = zeroState & ~WriteZeroStates.PreIsZero; //去掉前位非零信号
+                    //对零进行特殊处理，当前为非零
+                    zeroState &= ~WriteZeroStates.PreIsZero; //去掉前位非零信号
                     zeroState |= WriteZeroStates.BeenNonZero;
                 }
                 else
                 {
                     //当前为零时
-                    zeroState = zeroState & ~WriteZeroStates.CurIsNonZero; //去掉当前非零信号
+                    zeroState &= ~WriteZeroStates.CurIsNonZero; //去掉当前非零信号
                     zeroState |= WriteZeroStates.PreIsZero; //将前位为零信号传递到下一次循环
                 }
             }
@@ -153,6 +173,27 @@ namespace n2czh.core
                 result[i - ptr] = buffer[i];
             }
             return result;
+        }
+        [Conditional("DEBUG")]
+        public static void Report(this WriteZeroStates zero)
+        {
+            
+            if ((zero & WriteZeroStates.BeenNonZero) > 0)
+            {
+                Console.WriteLine("<WriteZeroStates> BeenNonZero");
+            }
+            if ((zero & WriteZeroStates.PreIsZero) > 0)
+            {
+                Console.WriteLine("<WriteZeroStates> PreIsZero");
+            }
+            if ((zero & WriteZeroStates.CurIsNonZero) > 0)
+            {
+                Console.WriteLine("<WriteZeroStates> CurIsNonZero");
+            }
+            if (zero == WriteZeroStates.Ready)
+            {
+                Console.WriteLine("<WriteZeroStates> Ready!");
+            }
         }
     }
 }
