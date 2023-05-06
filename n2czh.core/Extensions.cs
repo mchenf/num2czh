@@ -6,11 +6,86 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace n2czh.core
 {
     public static class Extensions
     {
-        //生成一个個级的大写数字, 长度不超过4
+
+        /// <summary>
+        /// 将代表字符串长度的正数 <paramref name="input"/> 以 <paramref name="cut"/> 为基底分解到新的位置
+        /// 0123456789 =>
+        /// 012345 | 6789
+        /// 输入 10
+        /// 返回 (6, 4)
+        /// 123 =>
+        /// null | 123
+        /// 输入 3
+        /// 返回 (0, 3)
+        /// </summary>
+        /// <param name="input">当前字符串的长度</param>
+        /// <param name="cut">切割多少长度</param>
+        /// <returns>(起始,长度)</returns>
+        public static (int, int) BreakString(this int input, int cut = 4)
+        {
+            int len = Math.Min(input, cut);
+            return (input - len, len);
+        }
+        /// <summary>
+        /// 根据 <paramref name="take"/> 的长度，决定数量级，基于 <paramref name="target"/> 生成中文大写数字。
+        /// 4位，万级；
+        /// 8位，亿级；
+        /// 16位，兆级；
+        /// </summary>
+        /// <param name="target">代表目标数字的字符数组片段，长度为 1-32</param>
+        /// <param name="take">切取多少位</param>
+        /// <returns>转化后的中文大写数字</returns>
+        public static char[] ProcessXClass(this ReadOnlySpan<char> target)
+        {
+            int len = target.Length;
+            if (len == 0 || len > 32)
+            {
+                return new char[0];
+            }
+
+            int take = len > 16 ? 32 : len > 8 ? 16 : len > 4 ? 8 : 4;
+
+            if (take == 4)
+            {
+                return target.ProcessKClass();
+            }
+
+            char[] buffer;
+            char[] result = new char[128];
+            int index = 0;
+            int unitIndex = 6;
+            int s = 0, t = 0;
+
+            while (take > 4)
+            {
+                take /= 2;
+                (s, t) = len.BreakString(take);
+                var left = target.Slice(0, s);
+                var right = target.Slice(s, t);
+                buffer = ProcessXClass(left);
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    result[index++] = buffer[i];
+                }
+                result[index++] = GlobalVariables.UnitChars[unitIndex--];
+                buffer = ProcessXClass(right);
+                for (int i = 0; i < buffer.Length; i++)
+                {
+                    result[index++] = buffer[i];
+                }
+            }
+            return result;
+        }
+        /// <summary>
+        /// 从一个长度不超过4位且不为零位的 <paramref name="target"/>
+        /// </summary>
+        /// <param name="target">代表目标数字的字符数组片段，长度为 1-4</param>
+        /// <returns>转化后的中文大写数字</returns>
         public static char[] ProcessKClass(this ReadOnlySpan<char> target)
         {
             int len = target.Length;
@@ -56,6 +131,7 @@ namespace n2czh.core
             }
             ptr++; //之前多减了一次，加一后才是 ptr。
             int bufferLen = buffer.Length - ptr;
+            //提取非 \0 的结果
             char[] result = new char[bufferLen];
             for (int i = ptr; i < buffer.Length; i++)
             {
