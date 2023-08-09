@@ -11,4 +11,8 @@
     <Folder Include="packages\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\n2czh.core\n2czh.core.csproj" />
+  </ItemGroup>
+
 </Project>
