@@ -1,6 +1,4 @@
-﻿using System.Net.Security;
-using System.Runtime.CompilerServices;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 
 namespace n2czh
@@ -32,9 +30,8 @@ namespace n2czh
     }
     internal class Program
     {
-        
 
-        readonly static string rxNumber = @"^\d+(\.\d{1,2}){0,1}$";
+        const string rxNumber = @"^\d+(\.\d{1,2}){0,1}$";
 
         static void Main(string[] args)
         {
@@ -102,24 +99,24 @@ namespace n2czh
         }
     }
 
-    public static class Helpers
+public static class Helpers
+{
+
+    public static (string, string) SplitNumStr(this string input, int TakeRight)
     {
-
-        public static (string, string) SplitNumStr(this string input, int TakeRight)
+        int s1, l1, l2;
+        string out1, out2;
+        (s1, l1, l2) = CutRight(input.Length, TakeRight);
+        out1 = out2 = "";
+        if (l1 > 0)
         {
-            int s1, l1, l2;
-            string out1, out2;
-            (s1, l1, l2) = CutRight(input.Length, TakeRight);
-            out1 = out2 = "";
-            if (l1 > 0)
-            {
-                out1 = input.Substring(s1, l1);
-            }
-
-            out2 = input.Substring(l1, l2);
-
-            return (out1, out2);
+            out1 = input.Substring(s1, l1);
         }
+
+        out2 = input.Substring(l1, l2);
+
+        return (out1, out2);
+    }
         /// <summary>
         /// 从一个长度为 <paramref name="Length"/> 的字符串中，试图从右边拿走 <paramref name="TakeRight"/> 个字
         /// </summary>
